@@ -1,6 +1,8 @@
 # Receitário
 
-Catálogo de receitas desenvolvido com React, Vite e TypeScript, consumindo a API pública [DummyJSON Recipes](https://dummyjson.com/recipes).`r`n`r`nRepositório: https://github.com/gcosta900/checkpointfrondend-5
+Catálogo de receitas desenvolvido com React, Vite e TypeScript, consumindo a API pública [DummyJSON Recipes](https://dummyjson.com/recipes).
+
+Repositório: https://github.com/gcosta900/checkpointfrondend-5
 
 ## Integrantes
 
