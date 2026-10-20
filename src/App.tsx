@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Route, Routes, useParams } from 'react-router-dom'
 
 type Recipe = {
@@ -23,6 +23,7 @@ function Catalog() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [query, setQuery] = useState('')
+  const searchInput = useRef<HTMLInputElement>(null)
   const [cuisine, setCuisine] = useState('')
   const [favorites, setFavorites] = useState<number[]>([])
 
@@ -38,6 +39,17 @@ function Catalog() {
 
   const cuisines = useMemo(() => [...new Set(recipes.map(recipe => recipe.cuisine))].sort((a, b) => a.localeCompare(b, 'pt-BR')), [recipes])
   const visibleRecipes = useMemo(() => recipes.filter(recipe => recipe.name.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR')) && (!cuisine || recipe.cuisine === cuisine)), [recipes, query, cuisine])
+  useEffect(() => {
+    const handleShortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault()
+        searchInput.current?.focus()
+      }
+    }
+    window.addEventListener('keydown', handleShortcut)
+    return () => window.removeEventListener('keydown', handleShortcut)
+  }, [])
+
   const toggleFavorite = (id: number) => setFavorites(current => current.includes(id) ? current.filter(item => item !== id) : [...current, id])
 
   if (loading) return <Loading />
@@ -47,7 +59,7 @@ function Catalog() {
     <section className="hero"><div className="hero-copy"><span className="eyebrow">SEU PRÓXIMO PRATO FAVORITO</span><h1>Ideias gostosas<br/>para <em>todos os dias.</em></h1><p>Um catálogo para descobrir sabores do mundo e encontrar inspiração para a próxima refeição.</p></div><div className="hero-art" aria-hidden="true"><span className="hero-sun"/><span className="hero-leaf leaf-one">✳</span><span className="hero-leaf leaf-two">✳</span><span className="hero-label">feito para<br/>abrir o apetite</span></div></section>
     <section className="catalog-section" aria-labelledby="catalog-title">
       <div className="section-heading"><div><span className="eyebrow">A COLEÇÃO</span><h2 id="catalog-title">O que vamos cozinhar?</h2></div><div className="favorite-count"><span aria-hidden="true">♡</span> {favorites.length} {favorites.length === 1 ? 'favorita' : 'favoritas'}</div></div>
-      <div className="filters"><label className="search-box"><span aria-hidden="true">⌕</span><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar receita pelo nome..." aria-label="Buscar receita pelo nome"/><kbd>⌘ K</kbd></label><label className="select-wrap"><span className="sr-only">Filtrar por culinária</span><select value={cuisine} onChange={event => setCuisine(event.target.value)}><option value="">Todas as culinárias</option>{cuisines.map(item => <option key={item} value={item}>{item}</option>)}</select></label></div>
+      <div className="filters"><label className="search-box"><span aria-hidden="true">⌕</span><input ref={searchInput} value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar receita pelo nome..." aria-label="Buscar receita pelo nome"/><kbd>Ctrl K</kbd></label><label className="select-wrap"><span className="sr-only">Filtrar por culinária</span><select value={cuisine} onChange={event => setCuisine(event.target.value)}><option value="">Todas as culinárias</option>{cuisines.map(item => <option key={item} value={item}>{item}</option>)}</select></label></div>
       <p className="results-line">{visibleRecipes.length} {visibleRecipes.length === 1 ? 'receita encontrada' : 'receitas encontradas'}</p>
       {visibleRecipes.length ? <div className="recipe-grid">{visibleRecipes.map(recipe => <article className="recipe-card" key={recipe.id}><Link to={`/receitas/${recipe.id}`} className="card-image-link" aria-label={`Ver receita: ${recipe.name}`}><img className="card-image" src={recipe.image} alt={recipe.name} loading="lazy"/><span className="card-cuisine">{recipe.cuisine}</span></Link><button className={`favorite-button ${favorites.includes(recipe.id) ? 'is-favorite' : ''}`} onClick={() => toggleFavorite(recipe.id)} aria-label={favorites.includes(recipe.id) ? `Remover ${recipe.name} das favoritas` : `Adicionar ${recipe.name} às favoritas`} aria-pressed={favorites.includes(recipe.id)}>{favorites.includes(recipe.id) ? '♥' : '♡'}</button><div className="card-body"><span className="card-meta">{recipe.difficulty} <span>·</span> {recipe.mealType[0] ?? 'Receita'}</span><Link to={`/receitas/${recipe.id}`} className="card-title">{recipe.name}</Link><div className="card-bottom"><span>◷ {recipe.prepTimeMinutes + recipe.cookTimeMinutes} min</span><span className="card-rating">★ {recipe.rating.toFixed(1)}</span></div></div></article>)}</div> : <div className="empty-state"><span>⌕</span><h3>Nenhuma receita por aqui</h3><p>Tente mudar a busca ou escolher outra culinária.</p><button className="text-button" onClick={() => { setQuery(''); setCuisine('') }}>Limpar filtros</button></div>}
     </section>
